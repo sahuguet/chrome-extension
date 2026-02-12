@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      padding: 0;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #4285f4;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    #closeBtn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      background: #fff;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+    .tab.active {
+      color: #4285f4;
+      border-bottom-color: #4285f4;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+    }
+    .tab-content.active { display: block; }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 12px;
+      color: #555;
+    }
+    label:first-child { margin-top: 0; }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .hint {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
+    }
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-primary { background: #4285f4; color: white; }
+    .btn-secondary { background: #e8e8e8; color: #333; }
+    #status {
+      display: none;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span>Settings</span>
+    <button id="closeBtn" title="Close">&#x2715;</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="general">General</button>
+    <button class="tab" data-tab="llm">LLM</button>
+    <button class="tab" data-tab="service1">Service 1</button>
+    <button class="tab" data-tab="service2">Service 2</button>
+  </div>
+
+  <!-- General Tab -->
+  <div id="tab-general" class="tab-content active">
+    <label for="userName">Display Name</label>
+    <input id="userName" type="text" placeholder="User">
+
+    <label for="theme">Theme</label>
+    <select id="theme">
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+
+    <label for="systemPrompt">System Prompt</label>
+    <textarea id="systemPrompt" placeholder="You are a helpful assistant."></textarea>
+    <div class="hint">Default instructions sent with every conversation.</div>
+  </div>
+
+  <!-- LLM Tab -->
+  <div id="tab-llm" class="tab-content">
+    <label for="apiUrl">API URL</label>
+    <input id="apiUrl" type="text" placeholder="https://api.openai.com/v1">
+    <div class="hint">Base URL for the OpenAI-compatible API.</div>
+
+    <label for="apiToken">Bearer Token</label>
+    <input id="apiToken" type="password" placeholder="sk-...">
+
+    <label for="model">Model</label>
+    <input id="model" type="text" placeholder="gpt-4">
+
+    <label for="temperature">Temperature</label>
+    <input id="temperature" type="number" min="0" max="2" step="0.1" placeholder="0.7">
+    <div class="hint">0 = deterministic, 2 = most creative.</div>
+
+    <label for="maxTokens">Max Tokens</label>
+    <input id="maxTokens" type="number" min="1" placeholder="4096">
+  </div>
+
+  <!-- Service 1 Tab -->
+  <div id="tab-service1" class="tab-content">
+    <label for="service1Name">Service Name</label>
+    <input id="service1Name" type="text" placeholder="e.g. Search API">
+
+    <label for="service1Url">Endpoint URL</label>
+    <input id="service1Url" type="text" placeholder="https://...">
+
+    <label for="service1Token">API Key</label>
+    <input id="service1Token" type="password" placeholder="Key or token">
+
+    <label for="service1Enabled">Enabled</label>
+    <select id="service1Enabled">
+      <option value="true">Yes</option>
+      <option value="false">No</option>
+    </select>
+  </div>
+
+  <!-- Service 2 Tab -->
+  <div id="tab-service2" class="tab-content">
+    <label for="service2Name">Service Name</label>
+    <input id="service2Name" type="text" placeholder="e.g. Database API">
+
+    <label for="service2Url">Endpoint URL</label>
+    <input id="service2Url" type="text" placeholder="https://...">
+
+    <label for="service2Token">API Key</label>
+    <input id="service2Token" type="password" placeholder="Key or token">
+
+    <label for="service2Enabled">Enabled</label>
+    <select id="service2Enabled">
+      <option value="true">Yes</option>
+      <option value="false">No</option>
+    </select>
+  </div>
+
+  <div style="padding: 0 20px 20px;">
+    <div class="actions">
+      <button id="saveBtn" class="btn btn-primary">Save</button>
+      <button id="resetBtn" class="btn btn-secondary">Reset</button>
+    </div>
+    <div id="status">Settings saved.</div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

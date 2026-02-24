@@ -31,6 +31,18 @@ test.describe('Chat Assistant Extension', () => {
     await context.close();
   });
 
+  // Reset storage between tests for isolation
+  test.beforeEach(async () => {
+    if (!extensionId) return;
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/sidepanel.html`);
+    await page.evaluate(() => chrome.storage.local.clear());
+    await page.close();
+  });
+
+  // Helper: shorthand for data-testid selector
+  const tid = (id) => `[data-testid="${id}"]`;
+
   // Load all test cases from the cases/ directory
   const caseFiles = fs.readdirSync(casesDir).filter(f => f.endsWith('.js')).sort();
   for (const file of caseFiles) {
@@ -40,6 +52,7 @@ test.describe('Chat Assistant Extension', () => {
       expect,
       getContext: () => context,
       getExtensionId: () => extensionId,
+      tid,
     });
   }
 });

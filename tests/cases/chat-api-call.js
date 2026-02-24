@@ -3,6 +3,7 @@ module.exports = function ({ test, expect, getContext, getExtensionId }) {
     const page = await getContext().newPage();
     await page.goto(`chrome-extension://${getExtensionId()}/sidepanel.html`);
 
+    // Set up settings via storage directly
     await page.evaluate(() => {
       return new Promise(resolve => {
         chrome.storage.local.set({
@@ -13,6 +14,7 @@ module.exports = function ({ test, expect, getContext, getExtensionId }) {
       });
     });
 
+    // Send a chat message and verify the request format
     const chatMessage = await page.evaluate(async () => {
       return new Promise((resolve) => {
         const messages = [{ role: 'user', content: 'Hello test' }];
@@ -32,6 +34,7 @@ module.exports = function ({ test, expect, getContext, getExtensionId }) {
     expect(chatMessage.sent.messages[0].content).toBe('Hello test');
     expect(chatMessage.response.ok).toBe(true);
 
+    // Verify the settings are correctly stored for the API call
     const settings = await page.evaluate(() => {
       return new Promise(resolve => {
         chrome.storage.local.get(['apiUrl', 'apiToken', 'model'], resolve);

@@ -1,4 +1,4 @@
-module.exports = function ({ test, expect, getContext, getExtensionId }) {
+module.exports = function ({ test, expect, getContext, getExtensionId, tid }) {
   test('settings button opens options page', async () => {
     const context = getContext();
     const page = await context.newPage();
@@ -6,11 +6,11 @@ module.exports = function ({ test, expect, getContext, getExtensionId }) {
 
     const [settingsPage] = await Promise.all([
       context.waitForEvent('page'),
-      page.click('#settingsBtn'),
+      page.click(tid('settings-btn')),
     ]);
 
     expect(settingsPage.url()).toContain('settings.html');
-    await expect(settingsPage.locator('.tab[data-tab="general"]')).toBeVisible();
+    await expect(settingsPage.locator(tid('tab-general'))).toBeVisible();
 
     await settingsPage.close();
     await page.close();

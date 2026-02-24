@@ -1,23 +1,27 @@
-module.exports = function ({ test, expect, getContext, getExtensionId }) {
+module.exports = function ({ test, expect, getContext, getExtensionId, tid }) {
   test('settings page renders with tabs', async () => {
     const page = await getContext().newPage();
     await page.goto(`chrome-extension://${getExtensionId()}/settings.html`);
 
-    await expect(page.locator('.tab[data-tab="general"]')).toBeVisible();
-    await expect(page.locator('.tab[data-tab="llm"]')).toBeVisible();
-    await expect(page.locator('.tab[data-tab="service1"]')).toBeVisible();
-    await expect(page.locator('.tab[data-tab="service2"]')).toBeVisible();
+    // Verify all four tabs exist
+    await expect(page.locator(tid('tab-general'))).toBeVisible();
+    await expect(page.locator(tid('tab-llm'))).toBeVisible();
+    await expect(page.locator(tid('tab-service1'))).toBeVisible();
+    await expect(page.locator(tid('tab-service2'))).toBeVisible();
 
-    await expect(page.locator('#tab-general')).toHaveClass(/active/);
-    await expect(page.locator('#tab-llm')).not.toHaveClass(/active/);
+    // General tab content is active by default
+    await expect(page.locator(tid('tab-content-general'))).toHaveClass(/active/);
+    await expect(page.locator(tid('tab-content-llm'))).not.toHaveClass(/active/);
 
-    await page.click('.tab[data-tab="llm"]');
-    await expect(page.locator('#tab-llm')).toHaveClass(/active/);
-    await expect(page.locator('#tab-general')).not.toHaveClass(/active/);
+    // Switch to LLM tab
+    await page.click(tid('tab-llm'));
+    await expect(page.locator(tid('tab-content-llm'))).toHaveClass(/active/);
+    await expect(page.locator(tid('tab-content-general'))).not.toHaveClass(/active/);
 
-    await expect(page.locator('#apiUrl')).toBeVisible();
-    await expect(page.locator('#apiToken')).toBeVisible();
-    await expect(page.locator('#model')).toBeVisible();
+    // Verify LLM fields are visible
+    await expect(page.locator(tid('input-apiUrl'))).toBeVisible();
+    await expect(page.locator(tid('input-apiToken'))).toBeVisible();
+    await expect(page.locator(tid('input-model'))).toBeVisible();
 
     await page.close();
   });

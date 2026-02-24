@@ -1,9 +1,10 @@
-module.exports = function ({ test, expect, getContext, getExtensionId }) {
+module.exports = function ({ test, expect, getContext, getExtensionId, tid }) {
   test('settings save across all tabs', async () => {
     const page = await getContext().newPage();
     await page.goto(`chrome-extension://${getExtensionId()}/settings.html`);
     await page.waitForLoadState('domcontentloaded');
 
+    // Set values directly via DOM (avoids keyboard event leaks)
     await page.evaluate(() => {
       document.getElementById('userName').value = 'TestUser';
       document.getElementById('systemPrompt').value = 'Be concise.';
@@ -12,11 +13,16 @@ module.exports = function ({ test, expect, getContext, getExtensionId }) {
       document.getElementById('service2Name').value = 'DB API';
     });
 
-    await page.click('#saveBtn');
+    // Save
+    await page.click(tid('save-btn'));
 
+    // Verify all values in storage
     const stored = await page.evaluate(() => {
       return new Promise(resolve => {
-        chrome.storage.local.get(['userName', 'systemPrompt', 'service1Name', 'service1Url', 'service2Name'], resolve);
+        chrome.storage.local.get(
+          ['userName', 'systemPrompt', 'service1Name', 'service1Url', 'service2Name'],
+          resolve,
+        );
       });
     });
     expect(stored.userName).toBe('TestUser');

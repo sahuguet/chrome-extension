@@ -2,7 +2,7 @@
 
 ### Architecture
 - **Manifest V3** Chrome extension with a side panel chat UI that calls an OpenAI-compatible `/chat/completions` API with SSE streaming.
-- 4 files in `extension/`: `manifest.json`, `background.js` (service worker), `sidepanel.html`+`sidepanel.js` (chat UI), `settings.html`+`settings.js` (tabbed options page), `content.js` (page text extractor).
+- Files in `extension/`: `manifest.json`, `background.js` (service worker), `sidepanel.html`+`sidepanel.js` (chat UI), `settings.html`+`settings.js` (tabbed options page), `content.js` (page text extractor).
 - Playwright tests in `tests/extension.spec.js` that auto-loads individual test files from `tests/cases/`.
 
 ### Manifest
@@ -14,6 +14,7 @@
 
 ### Side Panel (`sidepanel.html` + `sidepanel.js`)
 - Header with title + settings button (🔧 emoji — **requires `<meta charset="UTF-8">`** or emoji renders as mojibake)
+- All interactive elements have `data-testid` attributes for reliable test selectors
 - Scrollable message list, textarea input, Send button, Attach (📎) button
 - Settings button calls `chrome.runtime.openOptionsPage()` (opens settings in a new tab)
 - Attach button: sends `getPageText` message to background, which forwards to content script, prepends `[Page content]` to input
@@ -33,6 +34,7 @@
 ### Settings Page (`settings.html` + `settings.js`)
 - 4 tabs: General (display name, theme, system prompt), LLM (API URL, bearer token, model, temperature, max tokens), Service 1, Service 2 (name, URL, API key, enabled)
 - Also needs `<meta charset="UTF-8">`
+- All interactive elements have `data-testid` attributes
 - Header has a ✕ close button (right-aligned) that calls `window.close()`
 - Save button writes all fields across all tabs to `chrome.storage.local` at once
 - Reset button clears all keys
@@ -41,12 +43,31 @@
 
 ### Content Script (`content.js`)
 - Responds to `{ action: 'getPageText' }` with `{ text: document.body.innerText }`
+- Exposes `window.__myExt = { getPageText }` for direct Playwright testing without message passing
 
-### Tests
-- `tests/extension.spec.js`: shared `beforeAll` launches persistent context with extension, gets extension ID from service worker URL. Auto-discovers and loads all `tests/cases/*.js` files.
-- Each case file exports a function receiving `{ test, expect, getContext, getExtensionId }` (getters because context isn't set until `beforeAll`).
-- 8 tests: extension loads, sidepanel renders, settings button opens options page, settings tabs render, settings save/load, settings save across all tabs, attach page content, chat API call format.
-- **Flaky test fix**: `onActivated` enabling the side panel causes Chrome keyboard events to leak into Playwright `fill()` calls (stray `j` character). Fix: use `page.evaluate()` to set DOM values directly instead of `page.fill()` for the affected test.
+### Testing Best Practices Applied
+
+#### Testability Hooks
+- **`data-testid` on all interactive elements** — tests use `[data-testid="..."]` selectors instead of `#id` or CSS classes. A `tid()` helper in the test harness generates these selectors.
+- **`window.__myExt`** exposed in content script — available for in-page testing. **Note**: content scripts run in an isolated world, so `window.__myExt` is not visible from Playwright's `page.evaluate()`. To test content script readiness, poll via `chrome.runtime.sendMessage` from an extension page instead.
+- **All state in `chrome.storage.local`** — tests can read/write state via `page.evaluate()` without touching internal variables.
+
+#### Test Structure
+- `tests/extension.spec.js`: shared harness with `beforeAll` (browser launch), `afterAll` (cleanup), `beforeEach` (storage reset). Auto-discovers `tests/cases/*.js`.
+- Each case file exports `function({ test, expect, getContext, getExtensionId, tid })`.
+- **Storage is cleared between every test** via `beforeEach` → `chrome.storage.local.clear()` for full isolation.
+
+#### Reliable Selectors & Assertions
+- **Always `data-testid`** over `#id` or `.class` — decouples tests from styling.
+- **`waitForFunction` over `waitForTimeout`** — poll for storage-loaded values instead of sleeping. Example: `page.waitForFunction((sel) => document.querySelector(sel)?.value === 'expected', tid('input-apiUrl'))`.
+- **`waitForFunction(() => window.__myExt)`** to detect content script injection instead of fixed delays.
+- **`page.evaluate()` to set DOM values** when keyboard events leak (avoids Chrome side panel UI intercepting keystrokes).
+
+#### Playwright Setup
+- `launchPersistentContext` (not `launch`) — required for extension support.
+- `headless: false` — extensions don't work in headless mode.
+- Extension ID extracted from service worker URL after launch.
+- `reporter: 'list'` in config for clean terminal output.
 
 ### Key Bug Fixes Summary
 1. **Emoji mojibake** → add `<meta charset="UTF-8">`

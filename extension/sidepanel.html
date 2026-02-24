@@ -97,19 +97,20 @@
     <body>
         <header>
             <h1>Chat Assistant</h1>
-            <button id="settingsBtn" title="Settings">🔧</button>
+            <button id="settingsBtn" data-testid="settings-btn" title="Settings">🔧</button>
         </header>
 
-        <div id="messages"></div>
+        <div id="messages" data-testid="messages"></div>
 
-        <div id="inputArea">
-            <button id="attachBtn" title="Attach page content">📎</button>
+        <div id="inputArea" data-testid="input-area">
+            <button id="attachBtn" data-testid="attach-btn" title="Attach page content">📎</button>
             <textarea
                 id="chatInput"
+                data-testid="chat-input"
                 rows="1"
                 placeholder="Type a message..."
             ></textarea>
-            <button id="sendBtn">Send</button>
+            <button id="sendBtn" data-testid="send-btn">Send</button>
         </div>
 
         <script src="sidepanel.js"></script>
